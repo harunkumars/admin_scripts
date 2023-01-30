@@ -7,9 +7,30 @@ ActiveAdmin.register ActiveAdminReport do
   end
   member_action :execute do
     class TempClass
-
     end
     TempClass.class_eval(resource.ruby_script)
     render plain: TempClass.new.perform
+  end
+
+  index do
+    id_column
+    column :name
+    column :description
+    column :created_at
+    column :updated_at
+    actions
+  end
+
+  show do
+    code do
+      div(style: 'white-space: pre') do
+        resource.ruby_script
+      end
+    end
+  end
+  sidebar('Info', only: :show) do
+    attributes_table do
+      rows :name, :description, :created_at, :updated_at
+    end
   end
 end
