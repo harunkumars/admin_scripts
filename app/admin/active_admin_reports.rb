@@ -7,6 +7,8 @@ ActiveAdmin.register ActiveAdminReport do
   end
   member_action :execute do
     response.headers['Content-Type'] = 'text/event-stream'
+    response.headers['Last-Modified'] = Time.now.httpdate
+    response.stream.write "Streaming Started: \n"
 
     custom_puts = proc { |arg| response.stream.write "#{arg}\n" }
 
@@ -22,9 +24,16 @@ ActiveAdmin.register ActiveAdminReport do
       include mod
     end
 
-    klass.class_eval(resource.ruby_script)
-    response.stream.write klass.new.perform
+    begin
+      klass.class_eval(resource.ruby_script)
+      @out = ">>>> The Script returned: #{klass.new.perform}"
+    rescue => e
+      @out = ">>>> The Script failed: #{e}"
+    end
+
   ensure
+    response.stream.write "#{@out}\n"
+    response.stream.write "Streaming Ended. You may now close the tab.\n"
     response.stream.close
   end
 
