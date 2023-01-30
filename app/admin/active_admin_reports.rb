@@ -10,13 +10,16 @@ ActiveAdmin.register ActiveAdminReport do
 
     custom_puts = proc { |arg| response.stream.write "#{arg}\n" }
 
-    klass = Class.new do
-      custom_puts
-
+    mod = Module.new do
       define_method :puts do |*args|
         args.each{ |arg| custom_puts[arg] }
         nil
       end
+    end
+
+    klass = Class.new do
+      extend mod
+      include mod
     end
 
     klass.class_eval(resource.ruby_script)
