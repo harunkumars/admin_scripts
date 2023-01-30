@@ -6,6 +6,10 @@ ActiveAdmin.register ActiveAdminReport do
     link_to 'Execute Ruby Script', execute_admin_active_admin_report_path(resource)
   end
   member_action :execute do
-    render plain: eval(resource.ruby_script)
+    class TempClass
+
+    end
+    TempClass.class_eval(resource.ruby_script)
+    render plain: TempClass.new.perform
   end
 end
