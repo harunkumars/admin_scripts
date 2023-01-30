@@ -6,10 +6,23 @@ ActiveAdmin.register ActiveAdminReport do
     link_to 'Execute Ruby Script', execute_admin_active_admin_report_path(resource)
   end
   member_action :execute do
-    class TempClass
+    response.headers['Content-Type'] = 'text/event-stream'
+
+    custom_puts = proc { |arg| response.stream.write "#{arg}\n" }
+
+    klass = Class.new do
+      custom_puts
+
+      define_method :puts do |*args|
+        args.each{ |arg| custom_puts[arg] }
+        nil
+      end
     end
-    TempClass.class_eval(resource.ruby_script)
-    render plain: TempClass.new.perform
+
+    klass.class_eval(resource.ruby_script)
+    response.stream.write klass.new.perform
+  ensure
+    response.stream.close
   end
 
   index do
@@ -32,5 +45,9 @@ ActiveAdmin.register ActiveAdminReport do
     attributes_table do
       rows :name, :description, :created_at, :updated_at
     end
+  end
+
+  controller do
+    include ActionController::Live
   end
 end
