@@ -25,8 +25,10 @@ ActiveAdmin.register ActiveAdminReport do
     end
 
     begin
-      klass.class_eval(resource.ruby_script)
-      @out = ">>>> The Script returned: #{klass.new.perform}"
+      ActiveRecord::Base.connected_to(role: :reading) do
+        klass.class_eval(resource.ruby_script)
+        @out = ">>>> The Script returned: #{klass.new.perform}"
+      end
     rescue => e
       @out = ">>>> The Script failed: #{e}"
     end
